@@ -1,7 +1,12 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"main": ".open-next/worker.js",
-	"name": "unsaid-app",
+	// Must match the Worker name Cloudflare's Workers Builds CI expects for
+	// this project ("unsaid", not "unsaid-app" — the git-connected build's
+	// project name on the Cloudflare dashboard). A mismatch here causes the
+	// WORKER_SELF_REFERENCE binding below to point at a Worker that was
+	// never actually deployed, failing with Cloudflare API error 10143.
+	"name": "unsaid",
 	"compatibility_date": "2026-08-27",
 	"compatibility_flags": [
 		"nodejs_compat",
@@ -16,7 +21,7 @@
 			// Self-reference service binding, the service name must match the worker name
 			// see https://opennext.js.org/cloudflare/caching
 			"binding": "WORKER_SELF_REFERENCE",
-			"service": "unsaid-app"
+			"service": "unsaid"
 		}
 	],
 	"images": {
