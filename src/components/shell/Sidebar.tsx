@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import type { User } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/browser";
 import { apiGet, isNotConfigured } from "@/lib/api/client";
+import { saveOrganiserToken } from "@/lib/api/storage";
 import type { GetMySessionsResponse } from "@/lib/types";
 
 type SessionRow = GetMySessionsResponse["sessions"][number];
@@ -204,6 +205,7 @@ function SessionGroup({
             <li key={s.code}>
               <Link
                 href={`/s/${s.code}/room`}
+                onClick={() => saveOrganiserToken(s.code, s.organiser_token)}
                 className="block truncate rounded-sm px-2 py-1.5 text-sm text-text-secondary transition-colors duration-150 hover:bg-surface-raised hover:text-text-primary"
                 title={s.question}
               >

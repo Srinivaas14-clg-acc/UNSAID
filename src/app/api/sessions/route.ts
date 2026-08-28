@@ -29,6 +29,20 @@ function toPublicSession(session: Session): PublicSession {
   return rest;
 }
 
+// getSupabaseRouteHandlerClient writes any refreshed Supabase Auth cookies
+// (e.g. an access-token refresh mid-request) onto the response object it's
+// given — here, `authProbe` — rather than onto whatever response this route
+// actually returns. Without copying them across, a refreshed cookie is
+// silently dropped and the client can see one spurious 401 on the next
+// request before the root proxy.ts middleware catches up. Call this on
+// every return path in this file so the real response carries them.
+function withAuthCookies(response: NextResponse, authProbe: NextResponse) {
+  authProbe.cookies.getAll().forEach((cookie) => {
+    response.cookies.set(cookie);
+  });
+  return response;
+}
+
 // POST /api/sessions — create a session. Requires organiser login (Supabase
 // Auth session cookie) — see docs/API-CONTRACT.md §0.1 and §1.
 export async function POST(req: NextRequest) {
@@ -43,49 +57,61 @@ export async function POST(req: NextRequest) {
     } = await routeSupabase.auth.getUser();
 
     if (!user) {
-      return apiError("unauthorized", "Sign in with Google to create a session.");
+      return withAuthCookies(apiError("unauthorized", "Sign in with Google to create a session."), authProbe);
     }
     userId = user.id;
   } catch (err) {
     if (isMissingEnvError(err)) {
-      return apiError(
-        "not_configured",
-        "Supabase Auth is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+      return withAuthCookies(
+        apiError(
+          "not_configured",
+          "Supabase Auth is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+        ),
+        authProbe
       );
     }
-    return apiError("unauthorized", "Sign in with Google to create a session.");
+    return withAuthCookies(apiError("unauthorized", "Sign in with Google to create a session."), authProbe);
   }
 
   let body: CreateSessionRequest;
   try {
     body = await req.json();
   } catch {
-    return apiError("invalid_request", "Request body must be valid JSON.");
+    return withAuthCookies(apiError("invalid_request", "Request body must be valid JSON."), authProbe);
   }
 
   const { question, template, deadline, expected_participants } = body ?? {};
 
   if (typeof question !== "string" || question.trim().length === 0 || question.length > 500) {
-    return apiError("invalid_request", "question is required, 1..500 chars.");
+    return withAuthCookies(apiError("invalid_request", "question is required, 1..500 chars."), authProbe);
   }
 
   if (typeof template !== "string" || !VALID_TEMPLATES.includes(template as SessionTemplate)) {
-    return apiError("invalid_request", "template must be one of the 7 supported values.");
+    return withAuthCookies(
+      apiError("invalid_request", "template must be one of the 7 supported values."),
+      authProbe
+    );
   }
 
   if (typeof deadline !== "string" || Number.isNaN(Date.parse(deadline))) {
-    return apiError("invalid_request", "deadline must be a valid ISO 8601 date string.");
+    return withAuthCookies(
+      apiError("invalid_request", "deadline must be a valid ISO 8601 date string."),
+      authProbe
+    );
   }
 
   if (new Date(deadline).getTime() <= Date.now()) {
-    return apiError("invalid_request", "deadline must be in the future.");
+    return withAuthCookies(apiError("invalid_request", "deadline must be in the future."), authProbe);
   }
 
   if (
     expected_participants !== undefined &&
     (typeof expected_participants !== "number" || expected_participants < 1)
   ) {
-    return apiError("invalid_request", "expected_participants must be >= 1 if present.");
+    return withAuthCookies(
+      apiError("invalid_request", "expected_participants must be >= 1 if present."),
+      authProbe
+    );
   }
 
   try {
@@ -108,7 +134,10 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error || !data) {
-      return apiError("internal_error", `Failed to create session: ${error?.message ?? "unknown error"}`);
+      return withAuthCookies(
+        apiError("internal_error", `Failed to create session: ${error?.message ?? "unknown error"}`),
+        authProbe
+      );
     }
 
     const session = data as Session;
@@ -118,12 +147,18 @@ export async function POST(req: NextRequest) {
       session: toPublicSession(session),
     };
 
-    return NextResponse.json(response, { status: 201 });
+    return withAuthCookies(NextResponse.json(response, { status: 201 }), authProbe);
   } catch (err) {
     if (isMissingEnvError(err)) {
-      return apiError("not_configured", "Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.");
+      return withAuthCookies(
+        apiError("not_configured", "Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY."),
+        authProbe
+      );
     }
-    return apiError("internal_error", err instanceof Error ? err.message : "Unknown error.");
+    return withAuthCookies(
+      apiError("internal_error", err instanceof Error ? err.message : "Unknown error."),
+      authProbe
+    );
   }
 }
 
@@ -144,17 +179,20 @@ export async function GET(req: NextRequest) {
     } = await routeSupabase.auth.getUser();
 
     if (!user) {
-      return apiError("unauthorized", "Sign in with Google to view your sessions.");
+      return withAuthCookies(apiError("unauthorized", "Sign in with Google to view your sessions."), authProbe);
     }
     userId = user.id;
   } catch (err) {
     if (isMissingEnvError(err)) {
-      return apiError(
-        "not_configured",
-        "Supabase Auth is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+      return withAuthCookies(
+        apiError(
+          "not_configured",
+          "Supabase Auth is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY."
+        ),
+        authProbe
       );
     }
-    return apiError("unauthorized", "Sign in with Google to view your sessions.");
+    return withAuthCookies(apiError("unauthorized", "Sign in with Google to view your sessions."), authProbe);
   }
 
   try {
@@ -169,18 +207,24 @@ export async function GET(req: NextRequest) {
       .order("created_at", { ascending: false });
 
     if (error) {
-      return apiError("internal_error", `Failed to list sessions: ${error.message}`);
+      return withAuthCookies(apiError("internal_error", `Failed to list sessions: ${error.message}`), authProbe);
     }
 
     const response: GetMySessionsResponse = {
       sessions: (data ?? []) as GetMySessionsResponse["sessions"],
     };
 
-    return NextResponse.json(response, { status: 200 });
+    return withAuthCookies(NextResponse.json(response, { status: 200 }), authProbe);
   } catch (err) {
     if (isMissingEnvError(err)) {
-      return apiError("not_configured", "Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.");
+      return withAuthCookies(
+        apiError("not_configured", "Supabase is not configured. Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY."),
+        authProbe
+      );
     }
-    return apiError("internal_error", err instanceof Error ? err.message : "Unknown error.");
+    return withAuthCookies(
+      apiError("internal_error", err instanceof Error ? err.message : "Unknown error."),
+      authProbe
+    );
   }
 }

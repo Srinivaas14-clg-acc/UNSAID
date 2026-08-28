@@ -11,7 +11,7 @@ import { updateSession } from "@/lib/supabase/middleware";
  * system used by the 10 session-scoped API routes (see src/lib/api/auth.ts)
  * — those are completely unaffected by this middleware.
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   return await updateSession(request);
 }
 
