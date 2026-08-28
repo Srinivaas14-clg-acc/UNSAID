@@ -150,16 +150,39 @@ export function reverifyClaimIds(
 }
 
 /**
- * Splits clusters into agreement vs disagreement. This is deliberately
- * simple: a cluster is "disagreement" if it contains claims with differing
- * `stance` values among its share_freely+use_dont_quote-corroborated
- * members; otherwise it's "agreement". No LLM call — pure structural check.
+ * Splits clusters into agreement vs disagreement.
+ *
+ * A cluster is "disagreement" only when two DISTINCT PARTICIPANTS assert
+ * conflicting stances on the same claim (e.g. one "for", another "against").
+ * It is deliberately NOT based on raw stance-string diversity within the
+ * cluster: extraction runs once per participant in isolation (MISSION §3),
+ * so the model may tag the same underlying claim "against" for one
+ * participant and null/"neutral" for another purely as extraction noise,
+ * even when both participants are describing the identical fact and neither
+ * contradicts the other. Grouping by participant first, then checking for
+ * genuinely opposed pairs, avoids misclassifying that noise as disagreement.
+ * No LLM call — pure structural check.
  */
 function classifyAgreementOrDisagreement(cluster: Claim[]): "agreement" | "disagreement" {
-  const stances = new Set(
-    cluster.map((c) => c.stance).filter((s): s is string => Boolean(s))
-  );
-  return stances.size > 1 ? "disagreement" : "agreement";
+  const stanceByParticipant = new Map<string, Set<string>>();
+  for (const c of cluster) {
+    if (!c.stance) continue;
+    const set = stanceByParticipant.get(c.participant_id) ?? new Set<string>();
+    set.add(c.stance);
+    stanceByParticipant.set(c.participant_id, set);
+  }
+
+  const distinctStances = new Set<string>();
+  for (const set of stanceByParticipant.values()) {
+    for (const s of set) distinctStances.add(s);
+  }
+
+  // Only "for" vs "against" is a genuine disagreement. "neutral" alongside
+  // either is not a conflict — it means that participant didn't take a side,
+  // not that they oppose the other's position.
+  const hasFor = distinctStances.has("for");
+  const hasAgainst = distinctStances.has("against");
+  return hasFor && hasAgainst ? "disagreement" : "agreement";
 }
 
 /**
