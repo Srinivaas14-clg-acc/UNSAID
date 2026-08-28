@@ -21,7 +21,7 @@ export default function DashboardLayout({
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden md:flex-row">
       <Sidebar onNewSession={() => setWizardOpen(true)} />
-      <div className="flex flex-1 flex-col overflow-y-auto">{children}</div>
+      <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">{children}</div>
       {wizardOpen && (
         <CreateSessionWizard onClose={() => setWizardOpen(false)} />
       )}

@@ -99,7 +99,7 @@ export function Sidebar({
         + New session
       </button>
 
-      <nav className="flex flex-1 flex-col gap-6 overflow-y-auto">
+      <nav className="flex min-w-0 flex-1 flex-col gap-6 overflow-y-auto">
         <SessionGroup
           label="Active"
           sessions={activeSessions}
@@ -197,16 +197,16 @@ function SessionGroup({
   emptyText: string;
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex min-w-0 flex-col gap-2">
       <span className="text-caption">{label}</span>
       {loading ? (
         <p className="text-xs text-text-tertiary">Loading…</p>
       ) : sessions.length === 0 ? (
         <p className="text-xs text-text-tertiary">{emptyText}</p>
       ) : (
-        <ul className="flex flex-col gap-1">
+        <ul className="flex min-w-0 flex-col gap-1">
           {sessions.map((s) => (
-            <li key={s.code}>
+            <li key={s.code} className="min-w-0">
               <Link
                 href={`/s/${s.code}/room`}
                 onClick={() => saveOrganiserToken(s.code, s.organiser_token)}

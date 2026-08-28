@@ -42,7 +42,7 @@ export default function DashboardHomePage() {
   }, []);
 
   return (
-    <main data-state="private" className="flex flex-1 flex-col gap-10 px-8 py-12">
+    <main data-state="private" className="flex min-w-0 flex-1 flex-col gap-10 px-8 py-12">
       <div className="flex flex-col gap-2">
         <h1 className="text-heading-upright">Your sessions</h1>
         <p className="max-w-[65ch] text-text-secondary">
@@ -61,14 +61,14 @@ export default function DashboardHomePage() {
       ) : sessions.length === 0 ? (
         <EmptyState />
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="flex min-w-0 flex-col gap-3">
           {sessions.map((s) => (
-            <li key={s.code}>
+            <li key={s.code} className="min-w-0">
               <Link
                 href={`/s/${s.code}/room`}
-                className="flex flex-col gap-1 rounded-md border border-border bg-surface p-5 transition-colors duration-150 hover:border-border-strong"
+                className="flex min-w-0 flex-col gap-1 rounded-md border border-border bg-surface p-5 transition-colors duration-150 hover:border-border-strong"
               >
-                <span className="text-body-emphasis text-text-primary">
+                <span className="line-clamp-2 min-w-0 break-words text-body-emphasis text-text-primary">
                   {s.question}
                 </span>
                 <span className="text-caption">
