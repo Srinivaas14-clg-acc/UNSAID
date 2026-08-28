@@ -19,7 +19,7 @@ export default function DashboardLayout({
   const [wizardOpen, setWizardOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen w-full flex-1 flex-col md:flex-row">
+    <div className="flex h-screen w-full flex-col overflow-hidden md:flex-row">
       <Sidebar onNewSession={() => setWizardOpen(true)} />
       <div className="flex flex-1 flex-col overflow-y-auto">{children}</div>
       {wizardOpen && (
