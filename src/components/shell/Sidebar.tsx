@@ -112,12 +112,16 @@ export function Sidebar({
           loading={sessions === null}
           emptyText="No past sessions yet."
         />
-        {loadError && (
-          <p role="alert" className="text-xs text-danger">
-            {loadError}
-          </p>
-        )}
       </nav>
+
+      {loadError && (
+        <p
+          role="alert"
+          className="rounded-sm border border-danger/30 bg-danger/10 px-3 py-2 text-xs leading-snug text-danger"
+        >
+          {loadError}
+        </p>
+      )}
 
       <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
         <div className="flex min-w-0 items-center gap-2">
