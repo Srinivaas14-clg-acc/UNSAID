@@ -9,7 +9,7 @@ export function NoDisagreementState() {
   return (
     <Card className="flex flex-col gap-3 p-8">
       <span className="text-caption text-success">Where you disagree</span>
-      <h2>No meaningful disagreement found</h2>
+      <h2 className="text-heading-upright">No meaningful disagreement found</h2>
       <p className="max-w-[60ch] text-text-secondary">
         Across every answer that met the threshold, nothing surfaced as a
         genuine split. That is itself the finding — not a gap in the data.

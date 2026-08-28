@@ -1,28 +1,45 @@
 @import "tailwindcss";
 
 /*
- * Unsaid — design tokens
+ * Unsaid — design tokens ("Sounding")
  * See DESIGN.md at the project root for the full rationale behind every
- * value here. Light, editorial, warm neutrals. One accent color. Thin
- * borders over shadows. Do not add ad hoc colors/spacing outside this file.
+ * value here. Dark-only, near-black base. Dual accent: ember (private/
+ * confessional state) and teal (reveal/resolved state), gated by a
+ * `data-state="private" | "reveal"` attribute on a wrapping element — see
+ * DESIGN.md §1.1. Thin borders over shadows. Do not add ad hoc colors/
+ * spacing outside this file.
  */
 
 :root {
-  /* Color — warm neutral base, single accent (terracotta) */
-  --color-background: #fbf9f3;
-  --color-surface: #ffffff;
-  --color-surface-raised: #f4f1e8;
-  --color-border: #e4dfd1;
-  --color-border-strong: #d2cbb5;
-  --color-text-primary: #1f1b14;
-  --color-text-secondary: #6b6252;
-  --color-text-tertiary: #9a927c;
-  --color-accent: #b5482e;
-  --color-accent-hover: #9c3c25;
-  --color-accent-tint: #f4e4dc;
-  --color-success: #4b6b4e;
-  --color-danger: #a13a2e;
-  --color-focus-ring: #b5482e;
+  /* Color — near-black ink base, dual accent (ember / teal) */
+  --color-background: #0a0b0d;
+  --color-surface: #131519;
+  --color-surface-raised: #1b1e23;
+  --color-border: #24272d;
+  --color-border-strong: #33373f;
+  --color-text-primary: #f2f1ed;
+  --color-text-secondary: #9b9c9b;
+  --color-text-tertiary: #6a6c6e;
+
+  --color-ember: #e8734a;
+  --color-ember-hover: #f08a63;
+  --color-ember-tint: #2a1d17;
+
+  --color-teal: #3dd9c4;
+  --color-teal-hover: #5ce3d1;
+  --color-teal-tint: #14262a;
+
+  --color-success: var(--color-teal);
+  --color-danger: #e15252;
+
+  /* Default accent context — screens set data-state="private" or
+     data-state="reveal" on a wrapping element to resolve these to ember or
+     teal respectively (DESIGN.md §1.1). Falls back to ember outside any
+     data-state wrapper. */
+  --color-accent: var(--color-ember);
+  --color-accent-hover: var(--color-ember-hover);
+  --color-accent-tint: var(--color-ember-tint);
+  --color-focus-ring: var(--color-ember);
 
   /* Spacing — 4px base unit */
   --space-1: 4px;
@@ -45,7 +62,7 @@
 
   /* Shadow — reserved for floating layers only (modals, dropdowns, toasts) */
   --shadow-float:
-    0 4px 16px -4px rgba(31, 27, 20, 0.12), 0 1px 2px rgba(31, 27, 20, 0.06);
+    0 4px 16px -4px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
 
   /* Motion — two easing curves, two duration bands */
   --ease-entrance: cubic-bezier(0.16, 1, 0.3, 1);
@@ -53,6 +70,24 @@
   --duration-entrance-sm: 200ms;
   --duration-entrance-lg: 300ms;
   --duration-exit: 150ms;
+}
+
+/* Dual-accent state contexts — DESIGN.md §1.1. A wrapping element per
+   screen sets one of these; components underneath consume --color-accent /
+   --color-focus-ring and never reference --color-ember/--color-teal
+   directly (the Depth Reading dot-plot is the one documented exception). */
+[data-state="private"] {
+  --color-accent: var(--color-ember);
+  --color-accent-hover: var(--color-ember-hover);
+  --color-accent-tint: var(--color-ember-tint);
+  --color-focus-ring: var(--color-ember);
+}
+
+[data-state="reveal"] {
+  --color-accent: var(--color-teal);
+  --color-accent-hover: var(--color-teal-hover);
+  --color-accent-tint: var(--color-teal-tint);
+  --color-focus-ring: var(--color-teal);
 }
 
 /* Tailwind v4 theme mapping — exposes tokens as utilities:
@@ -66,6 +101,14 @@
   --color-text-primary: var(--color-text-primary);
   --color-text-secondary: var(--color-text-secondary);
   --color-text-tertiary: var(--color-text-tertiary);
+
+  --color-ember: var(--color-ember);
+  --color-ember-hover: var(--color-ember-hover);
+  --color-ember-tint: var(--color-ember-tint);
+  --color-teal: var(--color-teal);
+  --color-teal-hover: var(--color-teal-hover);
+  --color-teal-tint: var(--color-teal-tint);
+
   --color-accent: var(--color-accent);
   --color-accent-hover: var(--color-accent-hover);
   --color-accent-tint: var(--color-accent-tint);
@@ -84,12 +127,10 @@
   --shadow-float: var(--shadow-float);
 }
 
-/* No dark-mode palette yet — DESIGN.md §1: ship light only, correctly.
-   Tokens are structured so a dark block can be added later without
-   restructuring components. */
-
+/* Dark-only — DESIGN.md §1: this system ships dark only, no light-mode
+   palette, no prefers-color-scheme branching. */
 html {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 body {
@@ -102,18 +143,27 @@ body {
 
 h1 {
   font-family: var(--font-display);
+  font-style: italic;
   font-size: 2.75rem;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.1;
   letter-spacing: -0.01em;
 }
 
 h2 {
   font-family: var(--font-display);
+  font-style: italic;
   font-size: 1.75rem;
-  font-weight: 500;
+  font-weight: 400;
   line-height: 1.2;
   letter-spacing: -0.01em;
+}
+
+/* Non-interrogative headings (section labels, not phrased as a question to
+   the participant) use upright Instrument Serif — DESIGN.md §2. */
+h1.text-heading-upright,
+h2.text-heading-upright {
+  font-style: normal;
 }
 
 h3 {
@@ -159,13 +209,22 @@ h3 {
 }
 
 /* Accessibility floor: every interactive element gets this ring, no
-   exceptions. Components should rely on this rather than inventing
-   per-component focus styles. */
+   exceptions. Resolves to ember or teal depending on the active data-state
+   context (DESIGN.md §1.1). Components should rely on this rather than
+   inventing per-component focus styles. */
 :focus-visible {
   outline: 2px solid var(--color-focus-ring);
   outline-offset: 2px;
 }
 
+/* prefers-reduced-motion: flattens standard transitions/animations, and
+   explicitly disables the two data-driven motion exceptions in DESIGN.md
+   §5.3 — the ambient sine wave (elicitation) degrades to an opacity-only
+   response instead of animating wave height, and the Depth Reading dot-plot
+   (reveal) loses its staggered entrance in favor of an instant appearance.
+   Components implement the degraded behavior via this class; it does not
+   fire automatically from the media query alone because both motifs need a
+   *different* reduced-motion behavior, not just "off". */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -174,5 +233,19 @@ h3 {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+
+  /* Ambient sine wave: amplitude maps to opacity, not path height, under
+     reduced motion. Components read this custom property via
+     matchMedia("(prefers-reduced-motion: reduce)") in JS to switch mapping
+     mode — this class hook exists for any pure-CSS fallback state. */
+  .ambient-wave {
+    transition: opacity var(--duration-entrance-sm) var(--ease-entrance);
+  }
+
+  /* Depth Reading dot-plot: no staggered delay under reduced motion — every
+     dot/track appears at once. */
+  .depth-reading-dot {
+    transition-delay: 0ms !important;
   }
 }

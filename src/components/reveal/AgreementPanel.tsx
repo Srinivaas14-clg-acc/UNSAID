@@ -10,7 +10,7 @@ export function AgreementPanel({
     <Card className="flex flex-col gap-5 p-8">
       <div className="flex flex-col gap-1">
         <span className="text-caption text-success">Where you agree</span>
-        <h2>What actually holds up</h2>
+        <h2 className="text-heading-upright">What actually holds up</h2>
       </div>
       {clusters.length === 0 ? (
         <p className="text-text-secondary">

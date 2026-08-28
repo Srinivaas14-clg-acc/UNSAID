@@ -7,6 +7,7 @@ import { ProbeProgress } from "@/components/elicit/ProbeProgress";
 import { VoiceRecorder } from "@/components/elicit/VoiceRecorder";
 import { TextFallback } from "@/components/elicit/TextFallback";
 import { ConsentTap } from "@/components/elicit/ConsentTap";
+import { AmbientWave } from "@/components/elicit/AmbientWave";
 import { apiPost, isNotConfigured } from "@/lib/api/client";
 import { getParticipant } from "@/lib/api/storage";
 import type {
@@ -52,6 +53,8 @@ export default function TalkPage({
     null
   );
   const [answeredCount, setAnsweredCount] = useState(0);
+  const [liveLevel, setLiveLevel] = useState(0);
+  const [isRecording, setIsRecording] = useState(false);
 
   const participant = getParticipant(code);
 
@@ -199,7 +202,7 @@ export default function TalkPage({
       <CenteredMessage text="You haven't joined this session yet.">
         <button
           onClick={() => router.push(`/s/${code}`)}
-          className="text-sm font-medium text-accent hover:text-accent-hover"
+          className="text-sm font-medium text-ember hover:text-ember-hover"
         >
           Go join →
         </button>
@@ -227,7 +230,10 @@ export default function TalkPage({
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center px-6 py-16">
+    <main
+      data-state="private"
+      className="flex flex-1 flex-col items-center px-6 py-16"
+    >
       <div className="flex w-full max-w-lg flex-col gap-10">
         <ProbeProgress current={answeredCount} />
 
@@ -258,14 +264,20 @@ export default function TalkPage({
                 }}
                 className="flex flex-col gap-8"
               >
-                <p className="text-body text-text-primary">{turn.question}</p>
+                <h2>{turn.question}</h2>
 
-                <VoiceRecorder
-                  disabled={phase === "capturing"}
-                  onCaptured={(audio_base64, audio_mime_type) =>
-                    submitAnswer({ audio_base64, audio_mime_type })
-                  }
-                />
+                <div className="flex flex-col items-center gap-6">
+                  <AmbientWave level={liveLevel} recording={isRecording} />
+
+                  <VoiceRecorder
+                    disabled={phase === "capturing"}
+                    onCaptured={(audio_base64, audio_mime_type) =>
+                      submitAnswer({ audio_base64, audio_mime_type })
+                    }
+                    onLevelChange={setLiveLevel}
+                    onRecordingChange={setIsRecording}
+                  />
+                </div>
 
                 <div className="flex justify-center">
                   <TextFallback
@@ -273,6 +285,10 @@ export default function TalkPage({
                     onSubmit={(text) => submitAnswer({ text })}
                   />
                 </div>
+
+                <p className="text-center text-xs text-text-tertiary">
+                  Your answers stay private. Nobody sees who said what.
+                </p>
               </motion.div>
             )
           )}
@@ -292,7 +308,10 @@ function CenteredMessage({
   children?: React.ReactNode;
 }) {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-24">
+    <main
+      data-state="private"
+      className="flex flex-1 flex-col items-center justify-center gap-4 px-6 py-24"
+    >
       <p
         role={tone === "danger" ? "alert" : undefined}
         className={`max-w-[50ch] text-center ${

@@ -143,7 +143,13 @@ export function CreateSessionForm() {
               />
             </div>
 
-            <Button type="submit" size="lg" disabled={!canSubmit} className="mt-2">
+            <Button
+              type="submit"
+              accent="ember"
+              size="lg"
+              disabled={!canSubmit}
+              className="mt-2"
+            >
               {stage === "submitting" ? "Creating…" : "Create session"}
             </Button>
 

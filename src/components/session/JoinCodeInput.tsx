@@ -58,7 +58,12 @@ export function JoinCodeInput() {
           className="w-full bg-transparent px-5 py-4 text-center outline-none placeholder:text-text-tertiary text-mono-lg"
         />
       </motion.div>
-      <Button type="submit" size="lg" disabled={code.length !== CODE_LENGTH}>
+      <Button
+        type="submit"
+        accent="ember"
+        size="lg"
+        disabled={code.length !== CODE_LENGTH}
+      >
         Join session
       </Button>
     </form>

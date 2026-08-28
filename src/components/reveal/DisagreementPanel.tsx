@@ -17,7 +17,7 @@ export function DisagreementPanel({
     <Card className="flex flex-col gap-5 p-8">
       <div className="flex flex-col gap-1">
         <span className="text-caption text-danger">Where you disagree</span>
-        <h2>Where it splits</h2>
+        <h2 className="text-heading-upright">Where it splits</h2>
       </div>
       <ul className="flex flex-col gap-6">
         {clusters.map((cluster) => (

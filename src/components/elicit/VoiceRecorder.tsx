@@ -11,6 +11,14 @@ import {
 interface VoiceRecorderProps {
   onCaptured: (audioBase64: string, mimeType: string) => void;
   disabled?: boolean;
+  /**
+   * Optional pass-through of the live RMS level (0..1) and recording state,
+   * additive to existing behavior — lets a parent drive the ambient sine
+   * wave motif (DESIGN.md §5.1) from the same signal already used for the
+   * level ring below, without duplicating the mic/analyser setup.
+   */
+  onLevelChange?: (level: number) => void;
+  onRecordingChange?: (recording: boolean) => void;
 }
 
 /**
@@ -21,7 +29,12 @@ interface VoiceRecorderProps {
  * Under prefers-reduced-motion, the ring becomes opacity-only with no radius
  * change (still functional feedback, per DESIGN.md's explicit carve-out).
  */
-export function VoiceRecorder({ onCaptured, disabled }: VoiceRecorderProps) {
+export function VoiceRecorder({
+  onCaptured,
+  disabled,
+  onLevelChange,
+  onRecordingChange,
+}: VoiceRecorderProps) {
   const [recording, setRecording] = useState(false);
   const [level, setLevel] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -33,16 +46,20 @@ export function VoiceRecorder({ onCaptured, disabled }: VoiceRecorderProps) {
     setError(null);
     try {
       const handle = await startRecording({
-        onLevel: (l) => setLevel(l),
+        onLevel: (l) => {
+          setLevel(l);
+          onLevelChange?.(l);
+        },
       });
       handleRef.current = handle;
       setRecording(true);
+      onRecordingChange?.(true);
     } catch {
       setError(
         "Couldn't access the microphone. Check permissions, or type your answer instead."
       );
     }
-  }, [disabled, recording]);
+  }, [disabled, recording, onLevelChange, onRecordingChange]);
 
   const handleStop = useCallback(async () => {
     const handle = handleRef.current;
@@ -50,6 +67,8 @@ export function VoiceRecorder({ onCaptured, disabled }: VoiceRecorderProps) {
     if (!handle) return;
     setRecording(false);
     setLevel(0);
+    onRecordingChange?.(false);
+    onLevelChange?.(0);
     try {
       const { blob, mimeType } = await handle.stop();
       const audioBase64 = await blobToBase64(blob);
@@ -57,14 +76,16 @@ export function VoiceRecorder({ onCaptured, disabled }: VoiceRecorderProps) {
     } catch {
       setError("Recording was too short or failed to capture. Try again.");
     }
-  }, [onCaptured]);
+  }, [onCaptured, onLevelChange, onRecordingChange]);
 
   const handleCancel = useCallback(() => {
     handleRef.current?.cancel();
     handleRef.current = null;
     setRecording(false);
     setLevel(0);
-  }, []);
+    onRecordingChange?.(false);
+    onLevelChange?.(0);
+  }, [onLevelChange, onRecordingChange]);
 
   const ringScale = reduceMotion ? 1 : 1 + level * 0.6;
   const ringOpacity = 0.15 + level * 0.55;

@@ -89,7 +89,10 @@ export default function JoinPage({
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center px-6 py-24">
+    <main
+      data-state="private"
+      className="flex flex-1 flex-col items-center justify-center px-6 py-24"
+    >
       <div className="flex w-full max-w-md flex-col items-center gap-8 text-center">
         {stage === "loading" && (
           <p className="text-text-secondary">Loading session…</p>
@@ -97,7 +100,7 @@ export default function JoinPage({
 
         {stage === "not_found" && (
           <>
-            <h2>Session not found</h2>
+            <h2 className="text-heading-upright">Session not found</h2>
             <p className="max-w-[50ch] text-text-secondary">
               Double check the code — it&apos;s four characters, shared by
               whoever set up this session.
@@ -107,7 +110,7 @@ export default function JoinPage({
 
         {stage === "closed" && (
           <>
-            <h2>This session is closed</h2>
+            <h2 className="text-heading-upright">This session is closed</h2>
             <p className="max-w-[50ch] text-text-secondary">
               It&apos;s no longer accepting answers. If a reveal is ready, ask
               the organiser for the link.
@@ -117,7 +120,7 @@ export default function JoinPage({
 
         {stage === "error" && (
           <>
-            <h2>Something isn&apos;t working</h2>
+            <h2 className="text-heading-upright">Something isn&apos;t working</h2>
             <p role="alert" className="max-w-[50ch] text-danger">
               {errorMessage}
             </p>
@@ -141,6 +144,7 @@ export default function JoinPage({
               Your answers stay private. Nobody sees who said what.
             </p>
             <Button
+              accent="ember"
               size="lg"
               onClick={handleJoin}
               disabled={stage === "joining"}

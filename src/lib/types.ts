@@ -55,6 +55,7 @@ export interface Session {
   state: SessionState;
   expected_participants: number | null;
   organiser_token: string; // NEVER serialized to a participant-facing response
+  organiser_user_id: string | null; // auth.users(id); null for sessions created before this column existed
   created_at: string;
 }
 
@@ -196,6 +197,24 @@ export interface CreateSessionResponse {
   code: string;
   organiser_token: string;
   session: PublicSession;
+}
+
+// --- GET /api/sessions (organiser account auth; lists the caller's own sessions) --
+
+export interface GetMySessionsResponse {
+  sessions: Array<{
+    code: string;
+    question: string;
+    template: SessionTemplate;
+    deadline: string;
+    state: SessionState;
+    created_at: string;
+    // Deliberate, scoped exception to "never re-serve organiser_token" — see
+    // docs/API-CONTRACT.md §GET /api/sessions. Needed so the sidebar can
+    // deep-link into a past session's admin actions (synthesize/reveal/etc.)
+    // without a second credential-recovery step.
+    organiser_token: string;
+  }>;
 }
 
 // --- GET /api/sessions/[code] ------------------------------------------------

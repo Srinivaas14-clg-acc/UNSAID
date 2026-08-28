@@ -1,8 +1,11 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { PresenceBadge } from "@/components/presence/PresenceBadge";
 import { Button } from "@/components/ui/Button";
+import { JoinQrCode } from "@/components/room/JoinQrCode";
+import { LiveModeratorPanel } from "@/components/zoom/LiveModeratorPanel";
 import { apiGet, apiPost, isNotConfigured } from "@/lib/api/client";
 import { getOrganiserToken } from "@/lib/api/storage";
 import type {
@@ -19,6 +22,8 @@ export default function RoomPage({
   params: Promise<{ code: string }>;
 }) {
   const { code } = use(params);
+  const searchParams = useSearchParams();
+  const isZoomShare = searchParams.get("share") === "zoom";
   // Read synchronously from localStorage at render time, so "no organiser
   // token" is derived directly rather than written into `stage` state from
   // an effect (there's no async step involved in knowing whether it exists).
@@ -101,13 +106,33 @@ export default function RoomPage({
     return <CenteredMessage text={errorMessage} tone="danger" />;
   }
 
+  const joinLink =
+    typeof window !== "undefined" ? `${window.location.origin}/s/${code}` : "";
+
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-col gap-10 px-6 py-16">
+    <main
+      data-state="reveal"
+      className="mx-auto flex w-full max-w-2xl flex-col gap-10 px-6 py-16"
+    >
       <div className="flex flex-col gap-2">
         <span className="text-caption">Live room</span>
-        <h1>{question}</h1>
+        <h1 className="text-heading-upright">{question}</h1>
         <p className="text-mono text-text-tertiary">Code: {code}</p>
       </div>
+
+      {isZoomShare ? (
+        <LiveModeratorPanel code={code} />
+      ) : (
+        joinLink && (
+          <div className="flex flex-col items-start gap-3">
+            <span className="text-caption">Scan to join</span>
+            <JoinQrCode link={joinLink} />
+            <p className="text-mono break-all text-text-secondary">
+              {joinLink}
+            </p>
+          </div>
+        )
+      )}
 
       <PresenceBadge
         code={code}
@@ -116,6 +141,7 @@ export default function RoomPage({
 
       <div className="flex flex-col gap-3 border-t border-border pt-8">
         <Button
+          accent="teal"
           size="lg"
           onClick={handleSynthesize}
           disabled={synthStage === "running" || synthStage === "done"}
@@ -127,7 +153,7 @@ export default function RoomPage({
         {synthStage === "done" && (
           <a
             href={`/s/${code}/reveal`}
-            className="text-sm font-medium text-accent hover:text-accent-hover"
+            className="text-sm font-medium text-teal hover:text-teal-hover"
           >
             View the reveal →
           </a>
@@ -156,7 +182,10 @@ function CenteredMessage({
   tone?: "default" | "danger";
 }) {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center px-6 py-24">
+    <main
+      data-state="reveal"
+      className="flex flex-1 flex-col items-center justify-center px-6 py-24"
+    >
       <p
         role={tone === "danger" ? "alert" : undefined}
         className={`max-w-[50ch] text-center ${

@@ -6,6 +6,7 @@ import { AgreementPanel } from "@/components/reveal/AgreementPanel";
 import { DisagreementPanel } from "@/components/reveal/DisagreementPanel";
 import { QuietConstraintsPanel } from "@/components/reveal/QuietConstraintsPanel";
 import { RecommendationPanel } from "@/components/reveal/RecommendationPanel";
+import { DepthReadingChart } from "@/components/reveal/DepthReadingChart";
 import { apiGet, isNotConfigured } from "@/lib/api/client";
 import { getOrganiserToken, getParticipant } from "@/lib/api/storage";
 import type { RevealResponse, Synthesis } from "@/lib/types";
@@ -110,6 +111,8 @@ export default function RevealPage({
 
   if (!synthesis) return null;
 
+  const allClusters = [...synthesis.agreement, ...synthesis.disagreement];
+
   const panels = [
     <AgreementPanel key="agreement" clusters={synthesis.agreement} />,
     <DisagreementPanel
@@ -129,8 +132,11 @@ export default function RevealPage({
   ];
 
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-col gap-12 px-6 py-16">
-      <h1>The reveal</h1>
+    <main
+      data-state="reveal"
+      className="mx-auto flex w-full max-w-3xl flex-col gap-12 px-6 py-16"
+    >
+      <h1 className="text-heading-upright">The reveal</h1>
       <div className="flex flex-col gap-12">
         {panels.map((panel, i) => (
           <motion.div
@@ -146,6 +152,19 @@ export default function RevealPage({
             {panel}
           </motion.div>
         ))}
+        {allClusters.length > 0 && (
+          <motion.div
+            initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: 0.3,
+              ease: [0.16, 1, 0.3, 1],
+              delay: reduceMotion ? 0 : panels.length * 0.06,
+            }}
+          >
+            <DepthReadingChart clusters={allClusters} />
+          </motion.div>
+        )}
       </div>
     </main>
   );
@@ -159,7 +178,10 @@ function CenteredMessage({
   tone?: "default" | "danger";
 }) {
   return (
-    <main className="flex flex-1 flex-col items-center justify-center px-6 py-24">
+    <main
+      data-state="reveal"
+      className="flex flex-1 flex-col items-center justify-center px-6 py-24"
+    >
       <p
         role={tone === "danger" ? "alert" : undefined}
         className={`max-w-[50ch] text-center ${
